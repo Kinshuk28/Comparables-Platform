@@ -3,7 +3,9 @@
 Generates a fairness opinion report for a proposed M&A transaction by combining three
 standard valuation methodologies — Discounted Cash Flow (DCF), Comparable Company
 Analysis (trading comps), and Precedent Transaction Analysis — into a football field
-valuation summary, then drafts the accompanying narrative report with the OpenAI API.
+valuation summary, then drafts the accompanying narrative report with an LLM. It talks
+to any OpenAI-compatible chat completions API, and defaults to **Groq's free tier** so
+generating reports costs nothing.
 
 **This produces an AI-generated draft for educational and internal discussion purposes
 only.** It is not a substitute for a fairness opinion prepared by a licensed investment
@@ -27,8 +29,8 @@ disclaimer, and the AI is instructed to never omit it.
 3. The three implied ranges are plotted against the offer price on a football field
    chart, and a rule-based check flags whether the offer sits within, above, or below
    each range.
-4. On request, the computed numbers (never invented ones) are handed to the OpenAI API,
-   which drafts the narrative fairness opinion report around them.
+4. On request, the computed numbers (never invented ones) are handed to the LLM, which
+   drafts the narrative fairness opinion report around them.
 5. Everything is persisted to PostgreSQL so past analyses and reports can be revisited.
 
 ## Tech stack
@@ -36,17 +38,29 @@ disclaimer, and the AI is instructed to never omit it.
 - **Frontend:** Next.js 14 (App Router, TypeScript, Tailwind CSS, Recharts)
 - **Backend:** Python, FastAPI, SQLAlchemy
 - **Database:** PostgreSQL (JSONB columns store the full input/output payloads)
-- **AI:** OpenAI Chat Completions API
+- **AI:** any OpenAI-compatible Chat Completions API (defaults to Groq, free)
+
+## Getting a free API key
+
+The "Generate Fairness Opinion Report" step needs an LLM API key. The valuation math
+(DCF, comps, precedent transactions, the football field) works without one.
+
+By default the app is wired to **[Groq](https://console.groq.com/keys)** — sign up
+with just an email, no credit card, and it gives you a free API key immediately with a
+generous daily quota running Llama 3.3 70B, which is plenty for this. That's the
+recommended path if you don't want to spend anything.
+
+If you'd rather use something else, `backend/.env.example` has the settings for real
+OpenAI (paid) and Google Gemini (also free, no credit card) — just swap
+`OPENAI_BASE_URL` and `OPENAI_MODEL`.
 
 ## Quick start (Docker — recommended)
 
-You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed
-and an [OpenAI API key](https://platform.openai.com/api-keys) (only needed for the
-"Generate Fairness Opinion Report" step — the valuation math works without it).
+You need [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
 
 ```bash
 cp .env.example .env
-# edit .env and paste your OPENAI_API_KEY
+# edit .env and paste your (free) Groq API key into OPENAI_API_KEY
 
 docker compose up --build
 ```
@@ -102,7 +116,8 @@ Open http://localhost:3000.
 2. Click **Run Valuation Analysis** to see the football field chart and per-method
    valuation summary.
 3. Click **Generate Fairness Opinion Report** to have the AI draft the full narrative
-   report. This calls the OpenAI API, so `OPENAI_API_KEY` must be set on the backend.
+   report. This calls the configured LLM API, so `OPENAI_API_KEY` must be set on the
+   backend (see "Getting a free API key" above).
 4. Past reports are listed under **Past Reports** in the nav bar.
 
 ## Project layout
@@ -111,7 +126,7 @@ Open http://localhost:3000.
 backend/
   app/
     valuation/        DCF, comparable company, and precedent transaction math (pure functions, unit tested)
-    narrative.py       Builds the OpenAI prompt and calls the API
+    narrative.py       Builds the prompt and calls the configured LLM API
     models.py           SQLAlchemy models (Valuation, FairnessOpinion)
     schemas.py           Pydantic request/response models
     routers/              FastAPI endpoints

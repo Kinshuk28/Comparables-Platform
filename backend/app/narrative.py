@@ -70,7 +70,7 @@ def generate_fairness_opinion_narrative(payload: dict) -> tuple[str, str]:
             "enable fairness opinion generation."
         )
 
-    client = OpenAI(api_key=settings.openai_api_key)
+    client = OpenAI(api_key=settings.openai_api_key, base_url=settings.openai_base_url or None)
     response = client.chat.completions.create(
         model=settings.openai_model,
         messages=[
