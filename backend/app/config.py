@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # chat completions format and adjust openai_model to match.
     openai_api_key: str = ""
     openai_base_url: str = "https://api.groq.com/openai/v1"
-    openai_model: str = "llama-3.3-70b-versatile"
+    openai_model: str = "llama-3.1-8b-instant"
     cors_origins: str = "http://localhost:3000"
 
     @property

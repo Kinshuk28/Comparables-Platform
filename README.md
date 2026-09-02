@@ -120,6 +120,42 @@ Open http://localhost:3000.
    backend (see "Getting a free API key" above).
 4. Past reports are listed under **Past Reports** in the nav bar.
 
+## Deploying so others can use it (free)
+
+This app has **no login** — everyone who uses the deployed link shares one database, so
+anyone can see anyone else's past valuations and reports under "Past Reports." Fine for
+a demo among friends; don't put real confidential deal data in it if that's not okay.
+
+The free stack (no credit card required on any of the three):
+
+- **[Neon](https://neon.tech)** — free PostgreSQL database
+- **[Render](https://render.com)** — free hosting for the backend (FastAPI). Free
+  instances sleep after 15 minutes of no traffic; the first request after that takes
+  30-50 seconds to wake up. Fine for a demo, mention it if others notice a slow first
+  load.
+- **[Vercel](https://vercel.com)** — free hosting for the frontend (Next.js)
+
+Steps (in this order — each one feeds the next):
+
+1. **Neon:** sign up, create a project, copy the connection string it gives you
+   (starts with `postgresql://...`).
+2. **Render:** sign up, connect your GitHub account, **New → Blueprint**, pick this
+   repo. Render reads `render.yaml` at the repo root and sets up the backend service.
+   It'll prompt you for the env vars marked as secrets:
+   - `DATABASE_URL` → the Neon connection string from step 1
+   - `OPENAI_API_KEY` → your free Groq key
+   - `CORS_ORIGINS` → leave as `http://localhost:3000` for now, you'll fix this in
+     step 4
+   Deploy, then copy the `.onrender.com` URL Render assigns the service.
+3. **Vercel:** sign up, connect GitHub, import this repo. When it asks for the **Root
+   Directory**, set it to `frontend` (important — this is a two-app repo). Add an
+   environment variable `NEXT_PUBLIC_API_BASE_URL` set to the Render URL from step 2.
+   Deploy, then copy the `.vercel.app` URL it gives you.
+4. **Back in Render:** open the backend service's Environment settings, set
+   `CORS_ORIGINS` to the Vercel URL from step 3 (e.g.
+   `https://your-app.vercel.app`), save — this redeploys the backend.
+5. Share the Vercel URL.
+
 ## Project layout
 
 ```
